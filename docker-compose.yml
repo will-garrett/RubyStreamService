@@ -1,0 +1,42 @@
+version: '3'
+services:
+  db:
+    container_name: pg_db
+    image: postgres
+    volumes: 
+      - ./db_temp:/var/lib/postgresql/data
+  r_api:
+    container_name: ruby_api
+    build:
+      context: ./ruby_api/
+      dockerfile: Dockerfile
+    volumes:
+      - ./ruby_api:/app
+    ports:
+      - "3001:3000"
+    depends_on:
+      - db
+  client:
+    container_name: twitch_clone
+    build:
+      context: ./client/
+      dockerfile: Dockerfile
+    volumes:
+      - ./client:/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - r_api
+  rtmp:
+    container_name: rtmp_server
+    build:
+      context: ./rtmpserver
+      dockerfile: Dockerfile
+    volumes:
+      - ./rtmpserver:/app
+    ports:
+      - "1935:1935"
+      - "8000:8000"
+    depends_on:
+      - r_api
